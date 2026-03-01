@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Searching for OHNOPURNA</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+  body{font-family:'Orbitron',monospace;}
+
+  #persistent-title{
+    position:fixed;top:18px;left:50%;transform:translateX(-50%);
+    z-index:9999;font-size:clamp(11px,1.6vw,18px);letter-spacing:0.25em;
+    font-weight:700;text-align:center;pointer-events:none;
+    text-shadow:0 0 20px currentColor;transition:color 1.5s ease;
+    font-family:'Orbitron',monospace;
+  }
+
+  #start-screen{
+    position:fixed;inset:0;z-index:10000;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center, #0a0a1a 0%, #000 100%);
+  }
+  .start-stars{position:absolute;inset:0;overflow:hidden;}
+  .star{position:absolute;background:#fff;border-radius:50%;animation:twinkle var(--dur) infinite alternate;}
+  @keyframes twinkle{0%{opacity:0.1;}100%{opacity:1;}}
+  .start-title{
+    font-size:clamp(22px,4vw,52px);color:#00ffff;letter-spacing:0.3em;
+    text-shadow:0 0 40px #00ffff,0 0 80px #0088ff;margin-bottom:12px;
+    animation:pulse-glow 2s infinite alternate;
+  }
+  .start-sub{font-size:clamp(10px,1.2vw,14px);color:#888;letter-spacing:0.5em;margin-bottom:60px;font-family:'Share Tech Mono',monospace;}
+  @keyframes pulse-glow{from{text-shadow:0 0 20px #00ffff;}to{text-shadow:0 0 60px #00ffff,0 0 100px #0088ff,0 0 140px #0044ff;}}
+  #start-btn{
+    padding:16px 48px;font-family:'Orbitron',monospace;font-size:clamp(12px,1.4vw,16px);
+    letter-spacing:0.3em;color:#000;background:#00ffff;border:none;cursor:pointer;
+    clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+    text-transform:uppercase;font-weight:700;
+    box-shadow:0 0 30px #00ffff,0 0 60px #0088ff;
+    transition:all 0.3s;
+  }
+  #start-btn:hover{background:#fff;box-shadow:0 0 50px #fff,0 0 100px #00ffff;}
+
+  #scene-container{
+    position:fixed;inset:0;z-index:100;display:none;
+    overflow:hidden;
+  }
+
+  .scene{
+    position:absolute;inset:0;opacity:0;pointer-events:none;
+  }
+  .scene.active{opacity:1;pointer-events:all;}
+
+  /* ===== CITY SCENE ===== */
+  #scene-city{background:linear-gradient(180deg,#0d0028 0%,#1a0040 40%,#2d0060 100%);}
+  .city-building{position:absolute;bottom:0;}
+  .city-road{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(180deg,#1a1a1a,#111);}
+  .city-road::after{content:'';position:absolute;top:35px;left:0;right:0;height:4px;
+    background:repeating-linear-gradient(90deg,#ffdd00 0,#ffdd00 40px,transparent 40px,transparent 80px);
+    animation:road-scroll 1s linear infinite;}
+  @keyframes road-scroll{from{background-position:0 0;}to{background-position:-80px 0;}}
+  .neon-sign{position:absolute;font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,12px);
+    animation:neon-flicker 3s infinite;}
+  @keyframes neon-flicker{0%,95%,100%{opacity:1;}96%,99%{opacity:0.2;}}
+  .city-rain-line{position:absolute;width:1px;background:linear-gradient(180deg,transparent,rgba(100,200,255,0.6));
+    animation:rain-fall linear infinite;}
+  @keyframes rain-fall{from{transform:translateY(-100px);}to{transform:translateY(110vh);}}
+
+  /* ===== MOUNTAIN SCENE ===== */
+  #scene-mountain{background:linear-gradient(180deg,#0a1628 0%,#1a2a4a 50%,#2a3a5a 100%);}
+
+  /* ===== JUNGLE SCENE ===== */
+  #scene-jungle{background:linear-gradient(180deg,#051a08 0%,#0a2d0e 50%,#0d3a10 100%);}
+
+  /* ===== FIRE SCENE ===== */
+  #scene-fire{background:linear-gradient(180deg,#1a0500 0%,#2d0a00 50%,#1a0500 100%);}
+
+  /* ===== OCEAN SCENE ===== */
+  #scene-ocean{background:linear-gradient(180deg,#000d1a 0%,#001a33 40%,#002244 100%);}
+  .bubble{position:absolute;border-radius:50%;border:1px solid rgba(150,200,255,0.4);
+    animation:bubble-rise linear infinite;}
+  @keyframes bubble-rise{from{transform:translateY(0) scale(1);opacity:0.8;}to{transform:translateY(-100vh) scale(1.5);opacity:0;}}
+
+  /* ===== SPACE SCENE ===== */
+  #scene-space{background:radial-gradient(ellipse at 50% 100%,#0a0520 0%,#000 60%);}
+  .space-star{position:absolute;background:#fff;border-radius:50%;animation:star-twinkle var(--d) infinite alternate;}
+  @keyframes star-twinkle{0%{opacity:0.2;}100%{opacity:1;}}
+  .space-nebula{position:absolute;border-radius:50%;filter:blur(40px);opacity:0.15;}
+
+  /* ===== MOON SCENE ===== */
+  #scene-moon{background:linear-gradient(180deg,#050510 0%,#0a0a20 100%);}
+  .moon-crater{position:absolute;border-radius:50%;border:2px solid rgba(200,200,220,0.3);}
+
+  /* ===== GLITCH SCENE ===== */
+  #scene-glitch{background:#000;display:flex;align-items:center;justify-content:center;}
+  .glitch-text{font-size:clamp(40px,8vw,100px);color:#ff0040;font-weight:900;letter-spacing:0.1em;
+    text-shadow:4px 0 #00ffff,-4px 0 #ff0040;
+    animation:glitch-anim 0.1s infinite;}
+  @keyframes glitch-anim{
+    0%{clip-path:inset(0 0 95% 0);transform:translate(-4px);}
+    20%{clip-path:inset(30% 0 50% 0);transform:translate(4px);}
+    40%{clip-path:inset(60% 0 20% 0);transform:translate(-2px);}
+    60%{clip-path:inset(80% 0 5% 0);transform:translate(3px);}
+    80%{clip-path:inset(10% 0 80% 0);transform:translate(-3px);}
+    100%{clip-path:inset(0 0 95% 0);transform:translate(2px);}
+  }
+
+  /* ===== BEDROOM SCENE ===== */
+  #scene-bedroom{background:radial-gradient(ellipse at 50% 30%,#1a1020 0%,#0a080e 100%);}
+  .dream-fog{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(200,180,255,0.15) 0%,transparent 70%);
+    animation:fog-pulse 3s infinite alternate;}
+  @keyframes fog-pulse{from{opacity:0.5;}to{opacity:1;}}
+  .phone-glow{filter:drop-shadow(0 0 20px #7fffff) drop-shadow(0 0 40px #00ffaa);}
+  .final-bubble{
+    position:absolute;background:rgba(255,255,255,0.95);border-radius:20px;padding:20px 28px;
+    font-family:'Share Tech Mono',monospace;font-size:clamp(11px,1.3vw,15px);color:#1a0040;
+    max-width:340px;text-align:center;line-height:1.6;
+    box-shadow:0 0 40px rgba(150,100,255,0.5);
+    opacity:0;
+  }
+  .final-bubble::after{
+    content:'';position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+    border:8px solid transparent;border-top-color:rgba(255,255,255,0.95);
+  }
+
+  /* ===== STICKMAN ===== */
+  #stickman{position:absolute;z-index:500;}
+  #stickman svg{overflow:visible;}
+
+  /* ===== HOLOGRAM OVERLAY ===== */
+  .hologram{
+    position:absolute;font-family:'Orbitron',monospace;font-size:clamp(10px,1.5vw,18px);
+    color:#00ffff;letter-spacing:0.3em;pointer-events:none;
+    text-shadow:0 0 20px #00ffff;opacity:0;
+    animation:holo-scan 2s ease-in-out;
+  }
+  @keyframes holo-scan{
+    0%{opacity:0;transform:scaleX(0);}
+    30%{opacity:1;transform:scaleX(1);}
+    70%{opacity:1;transform:scaleX(1);}
+    100%{opacity:0;transform:scaleX(1.1);}
+  }
+  .holo-ui{
+    position:absolute;pointer-events:none;
+    border:1px solid rgba(0,255,255,0.4);padding:8px 16px;
+    font-family:'Share Tech Mono',monospace;font-size:11px;color:#00ffff;
+    background:rgba(0,255,255,0.05);
+  }
+  .holo-ui::before,.holo-ui::after{
+    content:'';position:absolute;width:8px;height:8px;
+    border-color:#00ffff;border-style:solid;
+  }
+  .holo-ui::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+  .holo-ui::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+
+  /* Parallax layers */
+  .parallax-layer{position:absolute;inset:0;will-change:transform;}
+
+  /* Progress indicator */
+  #progress-bar{
+    position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(90deg,#00ffff,#ff00ff);
+    z-index:9998;transition:width 1s ease;box-shadow:0 0 10px #00ffff;
+  }
+
+  /* Scene label */
+  #scene-label{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);
+    letter-spacing:0.3em;z-index:9998;
+  }
+</style>
+</head>
+<body>
+
+<!-- Persistent Title -->
+<div id="persistent-title">SEARCHING FOR OHNOPURNA</div>
+
+<!-- Progress Bar -->
+<div id="progress-bar" style="width:0%"></div>
+<div id="scene-label"></div>
+
+<!-- Start Screen -->
+<div id="start-screen">
+  <div class="start-stars" id="start-stars"></div>
+  
+  <button id="start-btn" onclick="startJourney()">press kar button</button>
+</div>
+
+<!-- Scene Container -->
+<div id="scene-container">
+
+  <!-- CITY -->
+  <div class="scene" id="scene-city">
+    <svg id="city-bg" style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <!-- Sky gradient -->
+      <defs>
+        <linearGradient id="city-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#0d0028"/>
+          <stop offset="100%" style="stop-color:#2d0060"/>
+        </linearGradient>
+        <linearGradient id="neon-pink" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#ff00aa"/>
+          <stop offset="100%" style="stop-color:#cc0077"/>
+        </linearGradient>
+        <linearGradient id="neon-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#00ffee"/>
+          <stop offset="100%" style="stop-color:#0088cc"/>
+        </linearGradient>
+        <filter id="blur-sm"><feGaussianBlur stdDeviation="3"/></filter>
+        <filter id="blur-md"><feGaussianBlur stdDeviation="8"/></filter>
+        <filter id="glow-strong"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect width="1200" height="700" fill="url(#city-sky)"/>
+      <!-- Moon -->
+      <circle cx="950" cy="80" r="40" fill="#fffae0" opacity="0.9"/>
+      <circle cx="960" cy="75" r="36" fill="#2d0060"/>
+      <!-- Buildings far layer -->
+      <g opacity="0.5" class="parallax-layer" id="city-far">
+        <rect x="0" y="350" width="60" height="350" fill="#1a0040"/>
+        <rect x="70" y="300" width="80" height="400" fill="#150030"/>
+        <rect x="160" y="380" width="50" height="320" fill="#1a0040"/>
+        <rect x="220" y="250" width="100" height="450" fill="#120028"/>
+        <rect x="330" y="320" width="70" height="380" fill="#1a0040"/>
+        <rect x="410" y="280" width="90" height="420" fill="#150030"/>
+        <rect x="510" y="360" width="55" height="340" fill="#1a0040"/>
+        <rect x="580" y="220" width="120" height="480" fill="#120028"/>
+        <rect x="710" y="300" width="80" height="400" fill="#1a0040"/>
+        <rect x="800" y="350" width="60" height="350" fill="#150030"/>
+        <rect x="870" y="260" width="100" height="440" fill="#1a0040"/>
+        <rect x="980" y="310" width="75" height="390" fill="#120028"/>
+        <rect x="1065" y="370" width="55" height="330" fill="#1a0040"/>
+        <rect x="1130" y="290" width="70" height="410" fill="#150030"/>
+      </g>
+      <!-- Buildings near layer -->
+      <g id="city-near">
+        <rect x="0" y="440" width="90" height="260" fill="#0a0020"/>
+        <rect x="5" y="420" width="80" height="20" fill="#110030"/>
+        <rect x="100" y="400" width="110" height="300" fill="#08001a"/>
+        <rect x="105" y="380" width="100" height="22" fill="#110030"/>
+        <rect x="220" y="460" width="70" height="240" fill="#0a0020"/>
+        <rect x="300" y="380" width="130" height="320" fill="#06001a"/>
+        <rect x="305" y="360" width="120" height="22" fill="#110030"/>
+        <rect x="440" y="430" width="85" height="270" fill="#0a0020"/>
+        <rect x="535" y="390" width="100" height="310" fill="#08001a"/>
+        <rect x="645" y="450" width="75" height="250" fill="#0a0020"/>
+        <rect x="730" y="370" width="140" height="330" fill="#06001a"/>
+        <rect x="735" y="350" width="130" height="22" fill="#110030"/>
+        <rect x="880" y="420" width="90" height="280" fill="#0a0020"/>
+        <rect x="980" y="400" width="110" height="300" fill="#08001a"/>
+        <rect x="985" y="380" width="100" height="22" fill="#110030"/>
+        <rect x="1100" y="440" width="100" height="260" fill="#0a0020"/>
+        <!-- Windows -->
+        <g fill="#ff8800" opacity="0.7">
+          <rect x="115" y="410" width="8" height="5"/><rect x="128" y="410" width="8" height="5"/>
+          <rect x="141" y="410" width="8" height="5"/><rect x="115" y="420" width="8" height="5"/>
+          <rect x="128" y="420" width="8" height="5"/><rect x="141" y="420" width="8" height="5"/>
+          <rect x="115" y="430" width="8" height="5"/><rect x="141" y="430" width="8" height="5"/>
+          <rect x="115" y="440" width="8" height="5"/><rect x="128" y="440" width="8" height="5"/>
+        </g>
+        <g fill="#00aaff" opacity="0.6">
+          <rect x="315" y="390" width="8" height="5"/><rect x="328" y="390" width="8" height="5"/>
+          <rect x="341" y="390" width="8" height="5"/><rect x="354" y="390" width="8" height="5"/>
+          <rect x="315" y="400" width="8" height="5"/><rect x="328" y="400" width="8" height="5"/>
+          <rect x="341" y="400" width="8" height="5"/><rect x="354" y="400" width="8" height="5"/>
+          <rect x="315" y="410" width="8" height="5"/><rect x="341" y="410" width="8" height="5"/>
+          <rect x="315" y="420" width="8" height="5"/><rect x="328" y="420" width="8" height="5"/>
+        </g>
+        <g fill="#aaff00" opacity="0.5">
+          <rect x="740" y="360" width="8" height="5"/><rect x="753" y="360" width="8" height="5"/>
+          <rect x="766" y="360" width="8" height="5"/><rect x="779" y="360" width="8" height="5"/>
+          <rect x="792" y="360" width="8" height="5"/><rect x="740" y="370" width="8" height="5"/>
+          <rect x="766" y="370" width="8" height="5"/><rect x="792" y="370" width="8" height="5"/>
+          <rect x="740" y="380" width="8" height="5"/><rect x="753" y="380" width="8" height="5"/>
+          <rect x="766" y="380" width="8" height="5"/>
+        </g>
+        <!-- Neon signs glow -->
+        <text x="115" y="375" fill="#ff00aa" font-size="10" font-family="monospace" filter="url(#glow-strong)"></text>
+        <text x="545" y="385" fill="#00ffee" font-size="10" font-family="monospace" filter="url(#glow-strong)"></text>
+        <text x="745" y="345" fill="#ff8800" font-size="10" font-family="monospace" filter="url(#glow-strong)"></text>
+      </g>
+      <!-- Road -->
+      <rect x="0" y="610" width="1200" height="90" fill="#111118"/>
+      <rect x="0" y="607" width="1200" height="6" fill="#222"/>
+      <!-- Road markings animated via JS -->
+      <g id="road-marks">
+        <rect x="0" y="650" width="60" height="4" fill="#ffdd00" id="rm1"/>
+        <rect x="100" y="650" width="60" height="4" fill="#ffdd00" id="rm2"/>
+        <rect x="200" y="650" width="60" height="4" fill="#ffdd00" id="rm3"/>
+        <rect x="300" y="650" width="60" height="4" fill="#ffdd00" id="rm4"/>
+        <rect x="400" y="650" width="60" height="4" fill="#ffdd00" id="rm5"/>
+        <rect x="500" y="650" width="60" height="4" fill="#ffdd00" id="rm6"/>
+        <rect x="600" y="650" width="60" height="4" fill="#ffdd00" id="rm7"/>
+        <rect x="700" y="650" width="60" height="4" fill="#ffdd00" id="rm8"/>
+        <rect x="800" y="650" width="60" height="4" fill="#ffdd00" id="rm9"/>
+        <rect x="900" y="650" width="60" height="4" fill="#ffdd00" id="rm10"/>
+        <rect x="1000" y="650" width="60" height="4" fill="#ffdd00" id="rm11"/>
+        <rect x="1100" y="650" width="60" height="4" fill="#ffdd00" id="rm12"/>
+      </g>
+      <!-- Rooftops (the platform stickman runs on) -->
+      <rect x="0" y="600" width="120" height="12" fill="#1a0040"/>
+      <rect x="140" y="570" width="100" height="12" fill="#1a0040"/>
+      <rect x="260" y="555" width="90" height="12" fill="#1a0040"/>
+      <rect x="380" y="575" width="110" height="12" fill="#1a0040"/>
+      <rect x="510" y="550" width="80" height="12" fill="#1a0040"/>
+      <rect x="610" y="560" width="130" height="12" fill="#1a0040"/>
+      <rect x="760" y="545" width="100" height="12" fill="#1a0040"/>
+      <rect x="880" y="570" width="110" height="12" fill="#1a0040"/>
+      <rect x="1010" y="555" width="190" height="12" fill="#1a0040"/>
+    </svg>
+    <!-- Rain overlay -->
+    <div id="city-rain" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+    <!-- Hologram -->
+    <div class="hologram" id="city-holo" style="top:15%;left:60%;white-space:nowrap;">// kya be kidr hai??//</div>
+    <div class="holo-ui" id="city-ui" style="top:20%;right:5%;opacity:0;">
+      <div>TARGET: OHNOPURNA</div>
+      <div>STATUS: SCANNING...</div>
+      <div>SIGNAL: ▓▓▓░░░░ 44%</div>
+    </div>
+  </div>
+
+  <!-- MOUNTAIN -->
+  <div class="scene" id="scene-mountain">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="mtn-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#0a1628"/>
+          <stop offset="100%" style="stop-color:#2a3a5a"/>
+        </linearGradient>
+        <linearGradient id="mtn-snow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#ddeeff"/>
+          <stop offset="40%" style="stop-color:#aabbcc"/>
+          <stop offset="100%" style="stop-color:#778899"/>
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="700" fill="url(#mtn-sky)"/>
+      <!-- Stars -->
+      <circle cx="100" cy="50" r="1" fill="#fff" opacity="0.8"/>
+      <circle cx="200" cy="30" r="1.5" fill="#fff" opacity="0.6"/>
+      <circle cx="350" cy="70" r="1" fill="#fff" opacity="0.9"/>
+      <circle cx="500" cy="20" r="1" fill="#fff" opacity="0.7"/>
+      <circle cx="700" cy="60" r="1.5" fill="#fff" opacity="0.5"/>
+      <circle cx="900" cy="40" r="1" fill="#fff" opacity="0.8"/>
+      <circle cx="1100" cy="25" r="1" fill="#fff" opacity="0.6"/>
+      <!-- Far mountains -->
+      <polygon points="0,500 150,200 300,500" fill="#1a2d4a" opacity="0.7"/>
+      <polygon points="200,500 400,150 600,500" fill="#162540" opacity="0.8"/>
+      <polygon points="500,500 700,180 900,500" fill="#1a2d4a" opacity="0.7"/>
+      <polygon points="800,500 1000,160 1200,500" fill="#162540" opacity="0.8"/>
+      <polygon points="1050,500 1200,220 1200,500" fill="#1a2d4a" opacity="0.7"/>
+      <!-- Snow caps far -->
+      <polygon points="150,200 140,230 160,230" fill="#ddeeff" opacity="0.6"/>
+      <polygon points="400,150 388,185 412,185" fill="#ddeeff" opacity="0.7"/>
+      <polygon points="700,180 688,215 712,215" fill="#ddeeff" opacity="0.6"/>
+      <polygon points="1000,160 988,195 1012,195" fill="#ddeeff" opacity="0.7"/>
+      <!-- Main climbable mountain - right side, tall cliff -->
+      <polygon points="800,700 850,50 1000,700" fill="#253550"/>
+      <polygon points="820,700 860,120 950,700" fill="#1e2c44"/>
+      <!-- Snow -->
+      <polygon points="850,50 835,110 865,110" fill="url(#mtn-snow)"/>
+      <!-- Cliff face with ledges -->
+      <rect x="858" y="200" width="25" height="5" fill="#2a3d5a" rx="2"/>
+      <rect x="845" y="300" width="30" height="5" fill="#2a3d5a" rx="2"/>
+      <rect x="860" y="400" width="28" height="5" fill="#2a3d5a" rx="2"/>
+      <rect x="850" y="500" width="32" height="5" fill="#2a3d5a" rx="2"/>
+      <rect x="840" y="580" width="35" height="5" fill="#2a3d5a" rx="2"/>
+      <!-- Ground -->
+      <rect x="0" y="670" width="1200" height="30" fill="#1a2840"/>
+      <!-- Hologram flag at peak -->
+      <line x1="850" y1="50" x2="850" y2="20" stroke="#00ffff" stroke-width="1"/>
+      <rect x="850" y="20" width="30" height="14" fill="rgba(0,255,255,0.2)" stroke="#00ffff" stroke-width="1"/>
+      <text x="852" y="31" fill="#00ffff" font-size="5" font-family="monospace">upar hai kya?</text>
+      <text x="852" y="38" fill="#00ffff" font-size="5" font-family="monospace">bkl</text>
+    </svg>
+    <div class="hologram" id="mtn-holo" style="top:10%;left:10%;white-space:nowrap;">// CLIMBING: ELEVATION 8848m //</div>
+  </div>
+
+  <!-- JUNGLE -->
+  <div class="scene" id="scene-jungle">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="jng-canopy" cx="50%" cy="0%" r="60%">
+          <stop offset="0%" style="stop-color:#051a08"/>
+          <stop offset="100%" style="stop-color:#0a2d0e"/>
+        </radialGradient>
+        <filter id="leaf-blur"><feGaussianBlur stdDeviation="2"/></filter>
+      </defs>
+      <rect width="1200" height="700" fill="url(#jng-canopy)"/>
+      <!-- Light rays -->
+      <g opacity="0.06">
+        <polygon points="200,0 180,700 220,700" fill="#88ff44"/>
+        <polygon points="400,0 370,700 430,700" fill="#88ff44"/>
+        <polygon points="600,0 570,700 630,700" fill="#88ff44"/>
+        <polygon points="800,0 770,700 830,700" fill="#88ff44"/>
+        <polygon points="1000,0 970,700 1030,700" fill="#88ff44"/>
+      </g>
+      <!-- Tree trunks -->
+      <rect x="50" y="200" width="25" height="500" fill="#2d1800"/>
+      <rect x="200" y="100" width="30" height="600" fill="#251400"/>
+      <rect x="400" y="150" width="28" height="550" fill="#2d1800"/>
+      <rect x="600" y="180" width="32" height="520" fill="#251400"/>
+      <rect x="800" y="120" width="26" height="580" fill="#2d1800"/>
+      <rect x="1000" y="170" width="30" height="530" fill="#251400"/>
+      <rect x="1150" y="140" width="28" height="560" fill="#2d1800"/>
+      <!-- Vines -->
+      <path d="M 200 100 Q 250 300 220 500 Q 190 600 230 700" stroke="#1a4a0a" stroke-width="3" fill="none"/>
+      <path d="M 600 180 Q 550 380 580 550 Q 610 650 590 700" stroke="#1a4a0a" stroke-width="3" fill="none"/>
+      <path d="M 1000 170 Q 950 370 970 540 Q 990 640 960 700" stroke="#1a4a0a" stroke-width="3" fill="none"/>
+      <!-- Swing vine (thicker) -->
+      <line x1="500" y1="0" x2="520" y2="350" stroke="#2d6010" stroke-width="4" id="swing-vine"/>
+      <line x1="750" y1="0" x2="730" y2="320" stroke="#2d6010" stroke-width="4" id="swing-vine2"/>
+      <!-- Canopy leaves -->
+      <g fill="#0d3a10">
+        <!-- Big leaf clusters -->
+        <ellipse cx="80" cy="180" rx="90" ry="50"/><ellipse cx="100" cy="150" rx="70" ry="40"/>
+        <ellipse cx="210" cy="90" rx="100" ry="55"/><ellipse cx="230" cy="60" rx="80" ry="45"/>
+        <ellipse cx="420" cy="130" rx="95" ry="52"/><ellipse cx="400" cy="100" rx="75" ry="42"/>
+        <ellipse cx="620" cy="160" rx="100" ry="50"/><ellipse cx="600" cy="130" rx="80" ry="40"/>
+        <ellipse cx="820" cy="100" rx="90" ry="55"/><ellipse cx="800" cy="70" rx="70" ry="42"/>
+        <ellipse cx="1020" cy="150" rx="95" ry="50"/><ellipse cx="1000" cy="120" rx="75" ry="40"/>
+        <ellipse cx="1170" cy="120" rx="80" ry="48"/><ellipse cx="1150" cy="90" rx="70" ry="38"/>
+        <!-- Mid canopy -->
+        <ellipse cx="320" cy="200" rx="85" ry="45"/><ellipse cx="500" cy="180" rx="90" ry="48"/>
+        <ellipse cx="700" cy="170" rx="85" ry="44"/><ellipse cx="900" cy="190" rx="88" ry="46"/>
+        <ellipse cx="1100" cy="175" rx="82" ry="42"/>
+      </g>
+      <g fill="#0a2d0e" opacity="0.7">
+        <ellipse cx="150" cy="220" rx="75" ry="38"/><ellipse cx="350" cy="230" rx="80" ry="40"/>
+        <ellipse cx="550" cy="210" rx="78" ry="36"/><ellipse cx="750" cy="225" rx="82" ry="40"/>
+        <ellipse cx="950" cy="215" rx="76" ry="37"/><ellipse cx="1130" cy="220" rx="72" ry="36"/>
+      </g>
+      <!-- Ground -->
+      <ellipse cx="600" cy="700" rx="700" ry="50" fill="#0a1e04"/>
+      <rect x="0" y="660" width="1200" height="40" fill="#061203"/>
+      <!-- Ground foliage -->
+      <g fill="#0d3a10" opacity="0.8">
+        <ellipse cx="100" cy="670" rx="80" ry="20"/><ellipse cx="300" cy="675" rx="70" ry="18"/>
+        <ellipse cx="500" cy="668" rx="90" ry="22"/><ellipse cx="700" cy="672" rx="75" ry="19"/>
+        <ellipse cx="900" cy="669" rx="85" ry="21"/><ellipse cx="1100" cy="674" rx="80" ry="20"/>
+      </g>
+      <!-- Platform where stickman stands (branches) -->
+      <path d="M 0 520 Q 200 510 300 500 Q 400 490 500 495 Q 600 500 700 495 Q 800 490 900 500 Q 1000 510 1100 505 Q 1150 500 1200 505" stroke="#3a2200" stroke-width="20" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="hologram" id="jungle-holo" style="top:25%;left:5%;white-space:nowrap;">//  GEAR ACTIVATED //</div>
+    <!-- AOT wire elements -->
+    <svg id="aot-wires" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 1200 700">
+      <line id="wire-left" x1="500" y1="0" x2="400" y2="500" stroke="#ccc" stroke-width="1.5" opacity="0" stroke-dasharray="4 4"/>
+      <line id="wire-right" x1="700" y1="0" x2="800" y2="500" stroke="#ccc" stroke-width="1.5" opacity="0" stroke-dasharray="4 4"/>
+    </svg>
+  </div>
+
+  <!-- FIRE -->
+  <div class="scene" id="scene-fire">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="fire-sky" cx="50%" cy="100%" r="80%">
+          <stop offset="0%" style="stop-color:#ff3300"/>
+          <stop offset="50%" style="stop-color:#1a0500"/>
+          <stop offset="100%" style="stop-color:#0d0000"/>
+        </radialGradient>
+        <filter id="fire-blur"><feGaussianBlur stdDeviation="3"/></filter>
+        <filter id="heat-dist">
+          <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="2" result="turb">
+            <animate attributeName="baseFrequency" values="0.01;0.012;0.01" dur="0.5s" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="turb" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <rect width="1200" height="700" fill="url(#fire-sky)"/>
+      <!-- Ember particles (static, animated via JS) -->
+      <circle id="emb1" cx="200" cy="400" r="2" fill="#ff8800"/>
+      <circle id="emb2" cx="400" cy="350" r="1.5" fill="#ff4400"/>
+      <circle id="emb3" cx="600" cy="420" r="2" fill="#ffaa00"/>
+      <circle id="emb4" cx="800" cy="380" r="1.5" fill="#ff6600"/>
+      <circle id="emb5" cx="1000" cy="410" r="2" fill="#ff3300"/>
+      <!-- Ground / lava floor -->
+      <rect x="0" y="620" width="1200" height="80" fill="#cc2200"/>
+      <path d="M 0 620 Q 100 600 200 620 Q 300 640 400 615 Q 500 600 600 620 Q 700 640 800 615 Q 900 600 1000 620 Q 1100 640 1200 615 L 1200 700 L 0 700 Z" fill="#aa1a00"/>
+      <!-- Lava glow -->
+      <rect x="0" y="615" width="1200" height="10" fill="#ff4400" opacity="0.6" filter="url(#fire-blur)"/>
+      <!-- Big flames (left) -->
+      <g id="flames-left" filter="url(#heat-dist)">
+        <path d="M 0 700 Q 30 500 60 600 Q 80 400 100 700" fill="#ff4400" opacity="0.9"/>
+        <path d="M 80 700 Q 110 450 140 580 Q 160 350 180 700" fill="#ff6600" opacity="0.8"/>
+        <path d="M 160 700 Q 190 480 220 590 Q 240 380 260 700" fill="#ff8800" opacity="0.7"/>
+      </g>
+      <!-- Big flames (middle) -->
+      <g id="flames-mid" filter="url(#heat-dist)">
+        <path d="M 450 700 Q 490 420 530 580 Q 550 300 570 700" fill="#ff4400" opacity="0.9"/>
+        <path d="M 540 700 Q 570 450 600 570 Q 620 320 640 700" fill="#ff6600" opacity="0.8"/>
+        <path d="M 620 700 Q 650 470 680 580 Q 700 360 720 700" fill="#ff8800" opacity="0.7"/>
+      </g>
+      <!-- Big flames (right) -->
+      <g id="flames-right" filter="url(#heat-dist)">
+        <path d="M 900 700 Q 940 430 970 570 Q 990 310 1010 700" fill="#ff4400" opacity="0.9"/>
+        <path d="M 990 700 Q 1020 460 1050 580 Q 1070 340 1090 700" fill="#ff6600" opacity="0.8"/>
+        <path d="M 1070 700 Q 1100 490 1130 600 Q 1150 370 1170 700" fill="#ff8800" opacity="0.7"/>
+      </g>
+      <!-- Ground (path for stickman) -->
+      <rect x="0" y="608" width="1200" height="12" fill="#2a0500"/>
+      <!-- Burning debris -->
+      <rect x="300" y="590" width="40" height="20" fill="#1a0a00" opacity="0.8"/>
+      <rect x="700" y="595" width="35" height="18" fill="#1a0a00" opacity="0.8"/>
+    </svg>
+    <div class="hologram" id="fire-holo" style="top:10%;left:40%;white-space:nowrap;color:#ff6600;text-shadow:0 0 20px #ff4400;">⚠ aag ke andar hai kya??</div>
+  </div>
+
+  <!-- OCEAN -->
+  <div class="scene" id="scene-ocean">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="ocean-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#000d1a"/>
+          <stop offset="30%" style="stop-color:#001a33"/>
+          <stop offset="100%" style="stop-color:#001030"/>
+        </linearGradient>
+        <radialGradient id="ocean-light" cx="50%" cy="20%" r="40%">
+          <stop offset="0%" style="stop-color:rgba(0,150,255,0.15)"/>
+          <stop offset="100%" style="stop-color:transparent"/>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="700" fill="url(#ocean-bg)"/>
+      <rect width="1200" height="700" fill="url(#ocean-light)"/>
+      <!-- Surface ripple at top -->
+      <path d="M 0 80 Q 150 60 300 80 Q 450 100 600 80 Q 750 60 900 80 Q 1050 100 1200 80 L 1200 0 L 0 0 Z" fill="#001a33" opacity="0.8"/>
+      <!-- Light shafts from surface -->
+      <g opacity="0.08">
+        <polygon points="200,80 170,700 230,700" fill="#00aaff"/>
+        <polygon points="500,80 470,700 530,700" fill="#00aaff"/>
+        <polygon points="800,80 770,700 830,700" fill="#00aaff"/>
+        <polygon points="1100,80 1070,700 1130,700" fill="#00aaff"/>
+      </g>
+      <!-- Seaweed -->
+      <g fill="none" stroke="#004420" stroke-width="3">
+        <path d="M 100 700 Q 120 600 100 500 Q 80 400 100 300" stroke-width="4"/>
+        <path d="M 300 700 Q 280 600 300 520 Q 320 440 300 360"/>
+        <path d="M 500 700 Q 520 610 500 520 Q 480 430 500 360"/>
+        <path d="M 700 700 Q 680 600 700 510 Q 720 420 700 340"/>
+        <path d="M 900 700 Q 920 610 900 520 Q 880 440 900 360"/>
+        <path d="M 1100 700 Q 1080 600 1100 510 Q 1120 420 1100 350"/>
+      </g>
+      <!-- Corals -->
+      <g fill="#aa0040" opacity="0.6">
+        <path d="M 150 700 Q 155 660 150 640 M 150 680 Q 165 665 170 650 M 150 680 Q 135 665 130 648"/>
+        <circle cx="150" cy="635" r="8"/><circle cx="170" cy="645" r="6"/><circle cx="130" cy="643" r="6"/>
+      </g>
+      <g fill="#cc4400" opacity="0.5">
+        <circle cx="400" cy="680" r="12"/><circle cx="412" cy="668" r="8"/><circle cx="388" cy="672" r="7"/>
+      </g>
+      <!-- Distant fish silhouettes -->
+      <g fill="rgba(0,100,200,0.3)">
+        <ellipse cx="300" cy="200" rx="15" ry="6"/><ellipse cx="400" cy="180" rx="12" ry="5"/>
+        <ellipse cx="700" cy="300" rx="18" ry="7"/><ellipse cx="900" cy="250" rx="14" ry="6"/>
+        <ellipse cx="1000" cy="180" rx="10" ry="4"/>
+      </g>
+      <!-- Bubbles (generated by JS) -->
+      <circle id="b1" cx="200" cy="650" r="4" fill="none" stroke="rgba(150,200,255,0.5)" stroke-width="1"/>
+      <circle id="b2" cx="500" cy="620" r="3" fill="none" stroke="rgba(150,200,255,0.4)" stroke-width="1"/>
+      <circle id="b3" cx="800" cy="640" r="5" fill="none" stroke="rgba(150,200,255,0.5)" stroke-width="1"/>
+      <circle id="b4" cx="350" cy="580" r="3" fill="none" stroke="rgba(150,200,255,0.4)" stroke-width="1"/>
+      <!-- Floor -->
+      <path d="M 0 680 Q 200 690 400 680 Q 600 670 800 683 Q 1000 695 1200 680 L 1200 700 L 0 700 Z" fill="#001428"/>
+    </svg>
+    <!-- Dynamic bubbles via JS -->
+    <div id="bubble-container" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+    <div class="hologram" id="ocean-holo" style="top:15%;left:30%;white-space:nowrap;">// hmmmmmmm pani mei??? //</div>
+  </div>
+
+  <!-- SPACE -->
+  <div class="scene" id="scene-space">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="space-bg" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" style="stop-color:#0a0520"/>
+          <stop offset="100%" style="stop-color:#000"/>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="700" fill="url(#space-bg)"/>
+      <!-- Stars -->
+      <g id="space-stars-svg">
+        <circle cx="50" cy="40" r="1" fill="#fff" opacity="0.9"/>
+        <circle cx="120" cy="80" r="1.5" fill="#fff" opacity="0.7"/>
+        <circle cx="200" cy="30" r="1" fill="#adf" opacity="0.8"/>
+        <circle cx="280" cy="100" r="2" fill="#fff" opacity="0.6"/>
+        <circle cx="350" cy="50" r="1" fill="#fff" opacity="0.9"/>
+        <circle cx="420" cy="20" r="1.5" fill="#ffa" opacity="0.7"/>
+        <circle cx="500" cy="90" r="1" fill="#fff" opacity="0.8"/>
+        <circle cx="560" cy="45" r="2" fill="#fff" opacity="0.5"/>
+        <circle cx="640" cy="110" r="1" fill="#adf" opacity="0.9"/>
+        <circle cx="720" cy="35" r="1.5" fill="#fff" opacity="0.7"/>
+        <circle cx="800" cy="75" r="1" fill="#fff" opacity="0.8"/>
+        <circle cx="880" cy="25" r="2" fill="#ffa" opacity="0.6"/>
+        <circle cx="960" cy="95" r="1" fill="#fff" opacity="0.9"/>
+        <circle cx="1040" cy="60" r="1.5" fill="#fff" opacity="0.7"/>
+        <circle cx="1120" cy="40" r="1" fill="#adf" opacity="0.8"/>
+        <circle cx="1180" cy="85" r="2" fill="#fff" opacity="0.5"/>
+        <circle cx="80" cy="160" r="1" fill="#fff" opacity="0.6"/>
+        <circle cx="170" cy="200" r="1.5" fill="#fff" opacity="0.8"/>
+        <circle cx="300" cy="170" r="1" fill="#ffa" opacity="0.7"/>
+        <circle cx="450" cy="190" r="2" fill="#fff" opacity="0.5"/>
+        <circle cx="600" cy="160" r="1" fill="#adf" opacity="0.9"/>
+        <circle cx="750" cy="185" r="1.5" fill="#fff" opacity="0.6"/>
+        <circle cx="900" cy="165" r="1" fill="#fff" opacity="0.8"/>
+        <circle cx="1050" cy="195" r="2" fill="#ffa" opacity="0.7"/>
+        <circle cx="1150" cy="175" r="1" fill="#fff" opacity="0.5"/>
+      </g>
+      <!-- Nebula -->
+      <ellipse cx="300" cy="300" rx="200" ry="100" fill="#3300ff" opacity="0.04" filter="url(#blur-md)"/>
+      <ellipse cx="900" cy="200" rx="150" ry="80" fill="#ff0088" opacity="0.05" filter="url(#blur-md)"/>
+      <!-- Distant planet -->
+      <circle cx="1050" cy="150" r="60" fill="#332244" opacity="0.8"/>
+      <path d="M 990 150 Q 1050 130 1110 150" stroke="#6644aa" stroke-width="12" fill="none" opacity="0.6"/>
+      <!-- Earth far away -->
+      <circle cx="100" cy="120" r="30" fill="#1a3d7c"/>
+      <circle cx="100" cy="120" r="30" fill="none" stroke="#2255aa" stroke-width="2"/>
+      <path d="M 75 115 Q 90 105 100 115 Q 110 108 120 118" fill="#2a6a30" opacity="0.7" clip-path="circle(30px at 100px 120px)"/>
+      <!-- Launch pad -->
+      <rect x="500" y="640" width="200" height="20" fill="#222233" rx="3"/>
+      <rect x="510" y="630" width="180" height="12" fill="#333344" rx="2"/>
+      <!-- Spacecraft -->
+      <g id="spacecraft">
+        <polygon points="600,540 580,610 620,610" fill="#ccccdd"/>
+        <rect x="582" y="610" width="36" height="30" fill="#aaaacc"/>
+        <rect x="570" y="620" width="12" height="15" fill="#8888aa" rx="2"/>
+        <rect x="618" y="620" width="12" height="15" fill="#8888aa" rx="2"/>
+        <ellipse cx="600" cy="540" rx="10" ry="8" fill="#ddddee"/>
+        <circle cx="600" cy="545" r="5" fill="#00aaff" opacity="0.7"/>
+        <!-- Engine glow -->
+        <ellipse id="rocket-exhaust" cx="600" cy="645" rx="10" ry="15" fill="#ff8800" opacity="0"/>
+      </g>
+      <!-- Ground -->
+      <rect x="0" y="660" width="1200" height="40" fill="#0a0a14"/>
+      <path d="M 0 660 Q 300 655 600 660 Q 900 665 1200 658 L 1200 700 L 0 700 Z" fill="#060610"/>
+    </svg>
+    <div class="hologram" id="space-holo" style="top:20%;left:5%;white-space:nowrap;">// LAUNCHING: //</div>
+    <div class="holo-ui" id="space-ui" style="top:30%;right:5%;opacity:0;">
+      <div>shayad chand par hai</div>
+      <div>DEST: MOON — 384,400 KM</div>
+      <div>STATUS: LAUNCH READY ▶</div>
+    </div>
+  </div>
+
+  <!-- MOON -->
+  <div class="scene" id="scene-moon">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="moon-sky" cx="50%" cy="100%" r="80%">
+          <stop offset="0%" style="stop-color:#0a0a18"/>
+          <stop offset="100%" style="stop-color:#000"/>
+        </radialGradient>
+        <radialGradient id="moon-ground" cx="50%" cy="100%" r="60%">
+          <stop offset="0%" style="stop-color:#2a2a38"/>
+          <stop offset="100%" style="stop-color:#1a1a28"/>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="700" fill="url(#moon-sky)"/>
+      <!-- Stars dense -->
+      <g fill="#fff">
+        <circle cx="30" cy="20" r="1" opacity="0.8"/><circle cx="80" cy="50" r="0.8" opacity="0.6"/>
+        <circle cx="140" cy="25" r="1.2" opacity="0.9"/><circle cx="200" cy="60" r="0.8" opacity="0.7"/>
+        <circle cx="260" cy="35" r="1" opacity="0.8"/><circle cx="320" cy="15" r="0.8" opacity="0.6"/>
+        <circle cx="380" cy="55" r="1.2" opacity="0.9"/><circle cx="440" cy="30" r="1" opacity="0.7"/>
+        <circle cx="500" cy="50" r="0.8" opacity="0.8"/><circle cx="560" cy="20" r="1.2" opacity="0.6"/>
+        <circle cx="620" cy="45" r="1" opacity="0.9"/><circle cx="680" cy="25" r="0.8" opacity="0.7"/>
+        <circle cx="740" cy="55" r="1.2" opacity="0.8"/><circle cx="800" cy="35" r="1" opacity="0.6"/>
+        <circle cx="860" cy="15" r="0.8" opacity="0.9"/><circle cx="920" cy="50" r="1.2" opacity="0.7"/>
+        <circle cx="980" cy="30" r="1" opacity="0.8"/><circle cx="1040" cy="60" r="0.8" opacity="0.6"/>
+        <circle cx="1100" cy="20" r="1.2" opacity="0.9"/><circle cx="1160" cy="45" r="1" opacity="0.7"/>
+        <circle cx="60" cy="100" r="0.8" opacity="0.6"/><circle cx="150" cy="120" r="1" opacity="0.8"/>
+        <circle cx="240" cy="95" r="0.8" opacity="0.7"/><circle cx="330" cy="115" r="1.2" opacity="0.5"/>
+        <circle cx="420" cy="100" r="1" opacity="0.9"/><circle cx="510" cy="125" r="0.8" opacity="0.6"/>
+        <circle cx="600" cy="105" r="1.2" opacity="0.8"/><circle cx="690" cy="90" r="1" opacity="0.7"/>
+        <circle cx="780" cy="120" r="0.8" opacity="0.5"/><circle cx="870" cy="100" r="1.2" opacity="0.9"/>
+        <circle cx="960" cy="115" r="1" opacity="0.6"/><circle cx="1050" cy="95" r="0.8" opacity="0.8"/>
+        <circle cx="1140" cy="120" r="1" opacity="0.7"/>
+      </g>
+      <!-- Earth in sky -->
+      <circle cx="180" cy="120" r="55" fill="#1a3d7c"/>
+      <circle cx="180" cy="120" r="55" fill="none" stroke="#3366cc" stroke-width="3" opacity="0.5"/>
+      <g opacity="0.7" clip-path="url(#earth-clip)">
+        <path d="M 145 110 Q 160 95 175 108 Q 185 95 200 105 Q 210 100 220 112" fill="#2a7a35"/>
+        <path d="M 140 130 Q 155 120 170 128 Q 180 120 190 130" fill="#2a7a35"/>
+      </g>
+      <clipPath id="earth-clip"><circle cx="180" cy="120" r="55"/></clipPath>
+      <!-- Moon surface -->
+      <ellipse cx="600" cy="780" rx="800" ry="180" fill="url(#moon-ground)"/>
+      <rect x="0" y="640" width="1200" height="60" fill="#1e1e2c"/>
+      <path d="M 0 640 Q 200 635 400 640 Q 600 645 800 638 Q 1000 632 1200 640 L 1200 700 L 0 700 Z" fill="#222235"/>
+      <!-- Craters -->
+      <ellipse cx="200" cy="660" rx="40" ry="10" fill="#1a1a28" stroke="#2a2a38" stroke-width="2"/>
+      <ellipse cx="500" cy="655" rx="55" ry="13" fill="#181828" stroke="#282838" stroke-width="2"/>
+      <ellipse cx="800" cy="662" rx="35" ry="9" fill="#1a1a28" stroke="#2a2a38" stroke-width="2"/>
+      <ellipse cx="1050" cy="658" rx="48" ry="11" fill="#181828" stroke="#282838" stroke-width="2"/>
+      <!-- Moon flag -->
+      <line x1="300" y1="580" x2="300" y2="640" stroke="#aaa" stroke-width="2"/>
+      <rect x="300" y="580" width="40" height="22" fill="#1a1a1a" stroke="#aaa" stroke-width="1"/>
+      <text x="303" y="595" fill="#00ffff" font-size="8" font-family="monospace">OHNO</text>
+      <text x="303" y="606" fill="#00ffff" font-size="8" font-family="monospace">PURNA</text>
+    </svg>
+    <div class="hologram" id="moon-holo" style="top:15%;left:35%;white-space:nowrap;">// idhar bhi nahi wtf!!//</div>
+    <div class="holo-ui" id="moon-ui" style="top:25%;right:5%;opacity:0;">
+      <div>SURFACE SCAN: COMPLETE</div>
+      <div>OHNOPURNA: NOT FOUND</div>
+      <div>SIGNAL LOST ■</div>
+    </div>
+  </div>
+
+  <!-- GLITCH EXPLOSION -->
+  <div class="scene" id="scene-glitch">
+    <div id="glitch-overlay" style="position:absolute;inset:0;background:#000;opacity:0;"></div>
+    <div id="glitch-bars" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+    <div class="glitch-text" id="glitch-main" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;">
+      !! SYSTEM FAILURE !!
+    </div>
+    <div id="glitch-sub" style="position:absolute;top:62%;left:50%;transform:translateX(-50%);
+      font-family:'Share Tech Mono',monospace;font-size:clamp(12px,1.6vw,18px);
+      color:#00ffff;letter-spacing:0.3em;opacity:0;text-align:center;">
+      THE SITE  HAS STOPPED WORKING
+    </div>
+    <div id="glitch-pixels" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+  </div>
+
+  <!-- BEDROOM (WAKE UP) -->
+  <div class="scene" id="scene-bedroom">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="bedroom-light" cx="50%" cy="20%" r="50%">
+          <stop offset="0%" style="stop-color:#2a1a40"/>
+          <stop offset="100%" style="stop-color:#0a080e"/>
+        </radialGradient>
+        <filter id="soft-glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect width="1200" height="700" fill="url(#bedroom-light)"/>
+      <!-- Window with moonlight -->
+      <rect x="850" y="80" width="200" height="260" fill="#0a1428" rx="4"/>
+      <rect x="855" y="85" width="190" height="250" fill="#0d1e3a" rx="3"/>
+      <!-- Moon through window -->
+      <circle cx="950" cy="180" r="50" fill="#fffce0" opacity="0.6" filter="url(#soft-glow)"/>
+      <circle cx="955" cy="175" r="46" fill="#0d1e3a"/>
+      <circle cx="950" cy="170" r="38" fill="#fffce0" opacity="0.7"/>
+      <!-- Window frame -->
+      <rect x="848" y="78" width="204" height="6" fill="#2a1a18" rx="2"/>
+      <rect x="848" y="336" width="204" height="6" fill="#2a1a18" rx="2"/>
+      <rect x="848" y="78" width="6" height="264" fill="#2a1a18"/>
+      <rect x="1046" y="78" width="6" height="264" fill="#2a1a18"/>
+      <rect x="948" y="78" width="4" height="264" fill="#2a1a18" opacity="0.6"/>
+      <rect x="848" y="208" width="204" height="4" fill="#2a1a18" opacity="0.6"/>
+      <!-- Moonlight beam on floor -->
+      <polygon points="855,336 1046,336 1100,700 800,700" fill="rgba(150,180,255,0.04)"/>
+      <!-- Floor -->
+      <rect x="0" y="560" width="1200" height="140" fill="#0d0a10"/>
+      <!-- Floor boards -->
+      <g stroke="#1a1520" stroke-width="1" opacity="0.4">
+        <line x1="0" y1="580" x2="1200" y2="580"/><line x1="0" y1="600" x2="1200" y2="600"/>
+        <line x1="0" y1="620" x2="1200" y2="620"/><line x1="0" y1="640" x2="1200" y2="640"/>
+        <line x1="0" y1="660" x2="1200" y2="660"/>
+        <line x1="150" y1="560" x2="200" y2="700"/><line x1="350" y1="560" x2="400" y2="700"/>
+        <line x1="550" y1="560" x2="600" y2="700"/><line x1="750" y1="560" x2="800" y2="700"/>
+        <line x1="950" y1="560" x2="1000" y2="700"/><line x1="1100" y1="560" x2="1150" y2="700"/>
+      </g>
+      <!-- Wall -->
+      <rect x="0" y="0" width="1200" height="560" fill="#100c18"/>
+      <!-- Ceiling -->
+      <rect x="0" y="0" width="1200" height="30" fill="#0e0b16"/>
+      <!-- Wallpaper subtle pattern -->
+      <g opacity="0.04" fill="#8866ff">
+        <circle cx="100" cy="100" r="20"/><circle cx="200" cy="200" r="20"/><circle cx="300" cy="100" r="20"/>
+        <circle cx="400" cy="200" r="20"/><circle cx="500" cy="100" r="20"/><circle cx="600" cy="200" r="20"/>
+        <circle cx="700" cy="100" r="20"/><circle cx="800" cy="200" r="20"/>
+        <circle cx="150" cy="300" r="20"/><circle cx="250" cy="400" r="20"/><circle cx="350" cy="300" r="20"/>
+        <circle cx="450" cy="400" r="20"/><circle cx="550" cy="300" r="20"/>
+      </g>
+      <!-- Nightstand -->
+      <rect x="680" y="480" width="100" height="80" fill="#1a1220" rx="4"/>
+      <rect x="670" y="478" width="120" height="8" fill="#221830" rx="2"/>
+      <!-- Lamp on nightstand -->
+      <rect x="720" y="440" width="8" height="42" fill="#332240"/>
+      <polygon points="700,440 740,440 730,420 710,420" fill="#442a50" opacity="0.9"/>
+      <ellipse cx="724" cy="443" rx="24" ry="6" fill="#553566"/>
+      <!-- Lamp glow -->
+      <ellipse cx="724" cy="443" rx="60" ry="40" fill="#ffccaa" opacity="0.04" filter="url(#soft-glow)"/>
+      <!-- BED -->
+      <!-- Bed frame -->
+      <rect x="200" y="430" width="460" height="130" fill="#1a1025" rx="6"/>
+      <!-- Headboard -->
+      <rect x="190" y="360" width="480" height="80" fill="#221530" rx="8"/>
+      <rect x="200" y="368" width="460" height="64" fill="#1c1228" rx="6"/>
+      <!-- Headboard detail -->
+      <g fill="#2a1a38" opacity="0.6">
+        <rect x="215" y="375" width="60" height="48" rx="4"/>
+        <rect x="285" y="375" width="60" height="48" rx="4"/>
+        <rect x="355" y="375" width="60" height="48" rx="4"/>
+        <rect x="425" y="375" width="60" height="48" rx="4"/>
+        <rect x="495" y="375" width="60" height="48" rx="4"/>
+        <rect x="565" y="375" width="60" height="48" rx="4"/>
+      </g>
+      <!-- Mattress -->
+      <rect x="205" y="435" width="450" height="120" fill="#2a2040" rx="4"/>
+      <!-- Sheets -->
+      <path d="M 200 480 Q 430 470 660 480 L 660 560 Q 430 550 200 560 Z" fill="#1e1634"/>
+      <!-- Pillow -->
+      <ellipse cx="350" cy="455" rx="100" ry="22" fill="#2e2448"/>
+      <ellipse cx="480" cy="455" rx="100" ry="22" fill="#2e2448"/>
+      <!-- Legs of bed -->
+      <rect x="205" y="550" width="16" height="15" fill="#160e20" rx="2"/>
+      <rect x="639" y="550" width="16" height="15" fill="#160e20" rx="2"/>
+    </svg>
+    <!-- Dream fog overlay -->
+    <div class="dream-fog"></div>
+    <!-- Phone element - positioned over stickman in bed -->
+    <svg id="phone-element" style="position:absolute;opacity:0;" viewBox="0 0 80 140" width="80" height="140">
+      <rect width="80" height="140" rx="12" fill="#111" stroke="#333" stroke-width="2"/>
+      <rect x="4" y="15" width="72" height="100" fill="#001a33" rx="3"/>
+      <!-- Screen glow content -->
+      <rect x="4" y="15" width="72" height="100" fill="none" stroke="#00ffaa" stroke-width="1" rx="3" opacity="0.5"/>
+      <text x="40" y="55" text-anchor="middle" fill="#00ffaa" font-size="7" font-family="monospace">@thoughtdaughterpurna</text>
+      <circle cx="40" cy="130" r="6" fill="#222" stroke="#444" stroke-width="1"/>
+    </svg>
+    <!-- Speech bubble for final reveal -->
+    <div class="final-bubble" id="final-bubble">
+      achaaaa it isn't <strong>OHNOPURNA</strong>… anymore.<br><br>
+      It's <strong style="color:#7700ff;font-size:1.2em;">THOUGHTDAUGHTERPURNA</strong>.
+    </div>
+    <div id="dream-particles" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+  </div>
+
+</div><!-- end scene-container -->
+
+<!-- Stickman SVG (shared across scenes) -->
+<div id="stickman" style="position:fixed;z-index:500;pointer-events:none;">
+  <svg id="stickman-svg" width="60" height="100" viewBox="0 0 60 100" overflow="visible">
+    <!-- Shadow -->
+    <ellipse id="sm-shadow" cx="30" cy="95" rx="18" ry="5" fill="rgba(0,0,0,0.4)"/>
+    <!-- Body -->
+    <line id="sm-body" x1="30" y1="22" x2="30" y2="62" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Head -->
+    <circle id="sm-head" cx="30" cy="14" r="10" fill="none" stroke="#fff" stroke-width="2.5"/>
+    <!-- Face (expression group) -->
+    <g id="sm-face">
+      <circle cx="26" cy="13" r="1.5" fill="#fff" id="sm-eye-l"/>
+      <circle cx="34" cy="13" r="1.5" fill="#fff" id="sm-eye-r"/>
+      <path id="sm-mouth" d="M 26 18 Q 30 21 34 18" stroke="#fff" stroke-width="1.5" fill="none"/>
+    </g>
+    <!-- Left Arm -->
+    <line id="sm-arm-l-upper" x1="30" y1="30" x2="14" y2="42" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <line id="sm-arm-l-lower" x1="14" y1="42" x2="8" y2="54" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Right Arm -->
+    <line id="sm-arm-r-upper" x1="30" y1="30" x2="46" y2="42" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <line id="sm-arm-r-lower" x1="46" y1="42" x2="52" y2="54" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Left Leg -->
+    <line id="sm-leg-l-upper" x1="30" y1="62" x2="18" y2="78" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <line id="sm-leg-l-lower" x1="18" y1="78" x2="12" y2="94" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Right Leg -->
+    <line id="sm-leg-r-upper" x1="30" y1="62" x2="42" y2="78" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <line id="sm-leg-r-lower" x1="42" y1="78" x2="48" y2="94" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Fire effect (hidden initially) -->
+    <g id="sm-fire" opacity="0">
+      <ellipse cx="30" cy="10" rx="8" ry="14" fill="#ff6600" opacity="0.7"/>
+      <ellipse cx="25" cy="15" rx="5" ry="10" fill="#ff4400" opacity="0.6"/>
+      <ellipse cx="35" cy="12" rx="5" ry="10" fill="#ff8800" opacity="0.6"/>
+    </g>
+    <!-- Wet effect (hidden initially) -->
+    <g id="sm-wet" opacity="0">
+      <ellipse cx="30" cy="50" rx="15" ry="3" fill="#00aaff" opacity="0.4"/>
+    </g>
+    <!-- Mud effect -->
+    <g id="sm-mud" opacity="0">
+      <circle cx="18" cy="78" r="4" fill="#5a3800" opacity="0.8"/>
+      <circle cx="12" cy="94" r="4" fill="#5a3800" opacity="0.8"/>
+    </g>
+    <!-- Rope/wire for swinging -->
+    <line id="sm-rope" x1="30" y1="0" x2="30" y2="-50" stroke="#ccc" stroke-width="1.5" opacity="0"/>
+  </svg>
+</div>
+
+<script>
+// ============================================================
+// CORE STATE
+// ============================================================
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const scenes = ['city','mountain','jungle','fire','ocean','space','moon','glitch','bedroom'];
+let currentScene = -1;
+let masterTL = null;
+let animFrame = null;
+const SM = {}; // stickman references
+
+// ============================================================
+// INIT STARS ON START SCREEN
+// ============================================================
+function initStartStars(){
+  const c = document.getElementById('start-stars');
+  for(let i=0;i<120;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    s.style.cssText = `
+      width:${Math.random()*3+1}px;height:${Math.random()*3+1}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --dur:${Math.random()*3+1}s;
+      animation-delay:${Math.random()*3}s;
+    `;
+    c.appendChild(s);
+  }
+}
+
+// ============================================================
+// RAIN for city
+// ============================================================
+function initRain(){
+  const c = document.getElementById('city-rain');
+  for(let i=0;i<80;i++){
+    const r = document.createElement('div');
+    r.className='city-rain-line';
+    r.style.cssText=`left:${Math.random()*100}%;height:${Math.random()*40+20}px;
+      animation-duration:${Math.random()*0.5+0.3}s;animation-delay:${Math.random()*1}s;
+      top:-60px;opacity:${Math.random()*0.5+0.3};`;
+    c.appendChild(r);
+  }
+}
+
+// ============================================================
+// BUBBLES for ocean
+// ============================================================
+function initBubbles(){
+  const c = document.getElementById('bubble-container');
+  for(let i=0;i<30;i++){
+    const b = document.createElement('div');
+    b.className='bubble';
+    const size = Math.random()*12+4;
+    b.style.cssText=`
+      width:${size}px;height:${size}px;border-radius:50%;
+      border:1px solid rgba(150,200,255,0.4);
+      position:absolute;
+      left:${Math.random()*100}%;
+      bottom:${Math.random()*30}%;
+      animation:bubble-rise ${Math.random()*6+4}s linear infinite;
+      animation-delay:${Math.random()*6}s;
+    `;
+    c.appendChild(b);
+  }
+}
+
+// ============================================================
+// STICKMAN HELPER
+// ============================================================
+function getSMEl(id){ return document.getElementById('sm-'+id); }
+function setStickmanColor(color){
+  const els = ['sm-body','sm-head','sm-arm-l-upper','sm-arm-l-lower','sm-arm-r-upper','sm-arm-r-lower',
+    'sm-leg-l-upper','sm-leg-l-lower','sm-leg-r-upper','sm-leg-r-lower'];
+  els.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      if(el.tagName==='circle') el.style.stroke=color;
+      else el.style.stroke=color;
+    }
+  });
+  document.getElementById('sm-head').style.stroke=color;
+  ['sm-eye-l','sm-eye-r'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.fill=color;
+  });
+  const mouth=document.getElementById('sm-mouth');
+  if(mouth) mouth.style.stroke=color;
+}
+
+// Animate walking: oscillate limbs
+let walkPhase = 0;
+let walkAnimId = null;
+function startWalk(speed=1){
+  if(walkAnimId) return;
+  const tick = ()=>{
+    walkPhase += 0.12*speed;
+    const s = Math.sin(walkPhase);
+    const c = Math.cos(walkPhase);
+    // Legs
+    gsap.set('#sm-leg-l-upper',{attr:{x2:30+s*14,y2:62+Math.abs(s)*12}});
+    gsap.set('#sm-leg-l-lower',{attr:{x1:30+s*14,y1:62+Math.abs(s)*12,x2:30+s*14-6,y2:94}});
+    gsap.set('#sm-leg-r-upper',{attr:{x2:30-s*14,y2:62+Math.abs(c)*12}});
+    gsap.set('#sm-leg-r-lower',{attr:{x1:30-s*14,y1:62+Math.abs(c)*12,x2:30-s*14+6,y2:94}});
+    // Arms (opposite to legs)
+    gsap.set('#sm-arm-l-upper',{attr:{x2:30-s*12,y2:30+Math.abs(c)*10}});
+    gsap.set('#sm-arm-l-lower',{attr:{x1:30-s*12,y1:30+Math.abs(c)*10,x2:30-s*12-4,y2:54}});
+    gsap.set('#sm-arm-r-upper',{attr:{x2:30+s*12,y2:30+Math.abs(s)*10}});
+    gsap.set('#sm-arm-r-lower',{attr:{x1:30+s*12,y1:30+Math.abs(s)*10,x2:30+s*12+4,y2:54}});
+    walkAnimId = requestAnimationFrame(tick);
+  };
+  walkAnimId = requestAnimationFrame(tick);
+}
+
+function stopWalk(){
+  if(walkAnimId){ cancelAnimationFrame(walkAnimId); walkAnimId=null; }
+  // Reset to idle pose
+  gsap.set('#sm-leg-l-upper',{attr:{x2:18,y2:78}});
+  gsap.set('#sm-leg-l-lower',{attr:{x1:18,y1:78,x2:12,y2:94}});
+  gsap.set('#sm-leg-r-upper',{attr:{x2:42,y2:78}});
+  gsap.set('#sm-leg-r-lower',{attr:{x1:42,y1:78,x2:48,y2:94}});
+  gsap.set('#sm-arm-l-upper',{attr:{x2:14,y2:42}});
+  gsap.set('#sm-arm-l-lower',{attr:{x1:14,y1:42,x2:8,y2:54}});
+  gsap.set('#sm-arm-r-upper',{attr:{x2:46,y2:42}});
+  gsap.set('#sm-arm-r-lower',{attr:{x1:46,y1:42,x2:52,y2:54}});
+}
+
+let climbAnimId=null;
+let climbPhase=0;
+function startClimb(){
+  if(climbAnimId) return;
+  const tick=()=>{
+    climbPhase+=0.1;
+    const s=Math.sin(climbPhase);
+    // Arms reach up alternately
+    gsap.set('#sm-arm-l-upper',{attr:{x2:20,y2:climbPhase%1>0.5?10:22}});
+    gsap.set('#sm-arm-l-lower',{attr:{x1:20,y1:climbPhase%1>0.5?10:22,x2:16,y2:climbPhase%1>0.5?-2:10}});
+    gsap.set('#sm-arm-r-upper',{attr:{x2:40,y2:climbPhase%1<=0.5?10:22}});
+    gsap.set('#sm-arm-r-lower',{attr:{x1:40,y1:climbPhase%1<=0.5?10:22,x2:44,y2:climbPhase%1<=0.5?-2:10}});
+    // Legs
+    gsap.set('#sm-leg-l-upper',{attr:{x2:22+s*8,y2:70}});
+    gsap.set('#sm-leg-r-upper',{attr:{x2:38-s*8,y2:70}});
+    climbAnimId=requestAnimationFrame(tick);
+  };
+  climbAnimId=requestAnimationFrame(tick);
+}
+function stopClimb(){
+  if(climbAnimId){cancelAnimationFrame(climbAnimId);climbAnimId=null;}
+}
+
+let swimAnimId=null, swimPhase=0;
+function startSwim(){
+  if(swimAnimId) return;
+  const tick=()=>{
+    swimPhase+=0.08;
+    const s=Math.sin(swimPhase);
+    const c=Math.cos(swimPhase);
+    // Arms sweep like breaststroke
+    gsap.set('#sm-arm-l-upper',{attr:{x2:30+s*20,y2:30+Math.abs(s)*8}});
+    gsap.set('#sm-arm-l-lower',{attr:{x1:30+s*20,y1:30+Math.abs(s)*8,x2:30+s*28,y2:38+Math.abs(s)*6}});
+    gsap.set('#sm-arm-r-upper',{attr:{x2:30-s*20,y2:30+Math.abs(c)*8}});
+    gsap.set('#sm-arm-r-lower',{attr:{x1:30-s*20,y1:30+Math.abs(c)*8,x2:30-s*28,y2:38+Math.abs(c)*6}});
+    // Legs flutter kick
+    gsap.set('#sm-leg-l-upper',{attr:{x2:26,y2:72+s*8}});
+    gsap.set('#sm-leg-l-lower',{attr:{x1:26,y1:72+s*8,x2:24,y2:90+s*6}});
+    gsap.set('#sm-leg-r-upper',{attr:{x2:34,y2:72-s*8}});
+    gsap.set('#sm-leg-r-lower',{attr:{x1:34,y1:72-s*8,x2:36,y2:90-s*6}});
+    swimAnimId=requestAnimationFrame(tick);
+  };
+  swimAnimId=requestAnimationFrame(tick);
+}
+function stopSwim(){if(swimAnimId){cancelAnimationFrame(swimAnimId);swimAnimId=null;}}
+
+// ============================================================
+// AUDIO CONTEXT - Web Audio API synth sounds
+// ============================================================
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type='sine', duration=0.5, vol=0.05, delay=0){
+  try{
+    const ctx=getAudioCtx();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type=type;osc.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+    gain.gain.setValueAtTime(0,ctx.currentTime+delay);
+    gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+delay+0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+duration);
+    osc.start(ctx.currentTime+delay);
+    osc.stop(ctx.currentTime+delay+duration);
+  }catch(e){}
+}
+
+function playCityMusic(){
+  const ctx=getAudioCtx();
+  const notes=[220,330,440,330,220,165,220,440];
+  notes.forEach((n,i)=>playTone(n,'sawtooth',0.12,0.06,i*0.15));
+  setTimeout(playCityMusic,notes.length*150+500);
+  window._cityMusicTO=setTimeout(()=>{},0);
+}
+
+function playAtmosPad(freq){
+  try{
+    const ctx=getAudioCtx();
+    const osc=ctx.createOscillator();
+    const osc2=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);osc2.connect(gain);gain.connect(ctx.destination);
+    osc.type='sine';osc.frequency.value=freq;
+    osc2.type='sine';osc2.frequency.value=freq*1.005;
+    gain.gain.setValueAtTime(0,ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.04,ctx.currentTime+2);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+8);
+    osc.start();osc2.start();
+    osc.stop(ctx.currentTime+9);osc2.stop(ctx.currentTime+9);
+  }catch(e){}
+}
+
+const sceneSounds = {
+  city: ()=>{ playTone(440,'sawtooth',0.08,0.05); playTone(220,'square',0.1,0.04,0.1); },
+  mountain: ()=>{ playAtmosPad(110); playAtmosPad(165); },
+  jungle: ()=>{ playTone(200,'triangle',0.3,0.06); playTone(300,'triangle',0.2,0.05,0.3); },
+  fire: ()=>{ playTone(80,'sawtooth',0.4,0.05); },
+  ocean: ()=>{ playAtmosPad(60); playAtmosPad(90); },
+  space: ()=>{ playAtmosPad(55); playAtmosPad(82.5); playAtmosPad(110); },
+  moon: ()=>{ playAtmosPad(40); playAtmosPad(60); },
+};
+
+// ============================================================
+// TITLE COLOR PER SCENE
+// ============================================================
+const titleColors = {
+  city:'#ff00cc', mountain:'#88aaff', jungle:'#44ff88',
+  fire:'#ff6600', ocean:'#00ccff', space:'#aa44ff',
+  moon:'#ccddff', glitch:'#ff0040', bedroom:'#cc88ff'
+};
+
+function setTitleColor(scene){
+  const el = document.getElementById('persistent-title');
+  el.style.color = titleColors[scene]||'#fff';
+}
+
+// ============================================================
+// SCENE TRANSITIONS
+// ============================================================
+function showScene(name){
+  // Hide all
+  scenes.forEach(s=>{
+    const el=document.getElementById('scene-'+s);
+    if(el) gsap.set(el,{opacity:0,pointerEvents:'none'});
+  });
+  const el=document.getElementById('scene-'+name);
+  if(el){ gsap.set(el,{opacity:1,pointerEvents:'all'}); }
+  setTitleColor(name);
+  currentScene=scenes.indexOf(name);
+  updateProgress();
+}
+
+function fadeToScene(name, dur=1.5){
+  return new Promise(resolve=>{
+    stopWalk(); stopClimb(); stopSwim();
+    const overlay = document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:#000;z-index:9990;opacity:0;pointer-events:none;';
+    document.body.appendChild(overlay);
+    gsap.to(overlay,{opacity:1,duration:dur/2,ease:'power2.in',onComplete:()=>{
+      showScene(name);
+      if(sceneSounds[name]) sceneSounds[name]();
+      gsap.to(overlay,{opacity:0,duration:dur/2,ease:'power2.out',onComplete:()=>{
+        overlay.remove();
+        resolve();
+      }});
+    }});
+  });
+}
+
+function updateProgress(){
+  const p = (currentScene+1)/scenes.length*100;
+  gsap.to('#progress-bar',{width:p+'%',duration:0.5});
+  const labels = ['CITY','MOUNTAINS','JUNGLE','FIRE','OCEAN','SPACE','MOON','…','WAKING UP'];
+  const el = document.getElementById('scene-label');
+  if(el) el.textContent = labels[currentScene]||'';
+}
+
+// ============================================================
+// STICKMAN POSITIONING
+// ============================================================
+function positionStickman(x, y, scaleX=1){
+  gsap.set('#stickman',{x:x,y:y,scaleX:scaleX});
+}
+
+// Convert scene SVG coords (1200x700) to screen coords
+function svgToScreen(x,y){
+  const scaleX = W()/1200;
+  const scaleY = H()/700;
+  const scale = Math.min(scaleX,scaleY); // for slice it's max
+  // For preserveAspectRatio xMidYMid slice:
+  const usedScaleX = W()/1200;
+  const usedScaleY = H()/700;
+  return {x: x*usedScaleX, y: y*usedScaleY};
+}
+
+// ============================================================
+// SCENE ANIMATIONS
+// ============================================================
+
+async function runCity(){
+  const sm = document.getElementById('stickman');
+  setStickmanColor('#fff');
+  gsap.set('#sm-fire',{opacity:0});
+  gsap.set('#sm-wet',{opacity:0});
+  gsap.set('#sm-mud',{opacity:0});
+  gsap.set('#sm-rope',{opacity:0});
+
+  // Position stickman on road running left to right
+  const {x,y} = svgToScreen(-80, 540);
+  positionStickman(x,y);
+  startWalk(2);
+
+  // Show hologram
+  gsap.fromTo('#city-holo',{opacity:0,scaleX:0},{opacity:1,scaleX:1,duration:0.5,ease:'power2.out',delay:0.5});
+  gsap.to('#city-ui',{opacity:1,duration:0.5,delay:1});
+
+  // Animate road markings scrolling
+  gsap.to('#road-marks',{x:-100,duration:1,repeat:20,ease:'none'});
+
+  // Move stickman across screen
+  await gsap.to(sm,{x:W()*1.1,duration:4.5,ease:'power1.inOut'}).then();
+}
+
+async function runMountain(){
+  setStickmanColor('#aabbff');
+  gsap.set('#sm-fire',{opacity:0});
+  gsap.set('#sm-wet',{opacity:0});
+
+  // Start at bottom of cliff
+  const start = svgToScreen(860, 640);
+  positionStickman(start.x, start.y);
+
+  // Climb up
+  startClimb();
+  const end = svgToScreen(860, 80);
+
+  gsap.fromTo('#mtn-holo',{opacity:0},{opacity:1,duration:0.5,delay:0.5});
+
+  await gsap.to('#stickman',{x:end.x, y:end.y, duration:5, ease:'power1.inOut'}).then();
+  stopClimb();
+
+  // Wave at peak
+  gsap.to('#sm-arm-r-upper',{attr:{x2:50,y2:20},duration:0.3,yoyo:true,repeat:4});
+  await gsap.to('#stickman',{scale:0.7,opacity:0.8,duration:1}).then();
+}
+
+async function runJungle(){
+  setStickmanColor('#88ff88');
+  gsap.set('#sm-fire',{opacity:0});
+  gsap.set('#sm-wet',{opacity:0});
+
+  // Show AOT wires
+  gsap.fromTo('#jungle-holo',{opacity:0},{opacity:1,duration:0.5,delay:0.3});
+
+  const start = svgToScreen(100, 495);
+  positionStickman(start.x, start.y);
+  startWalk(1.8);
+
+  // Swing sequence
+  gsap.to('#stickman',{x:svgToScreen(400,495).x, duration:1.5, ease:'power1.in'});
+  await new Promise(r=>setTimeout(r,1500));
+  stopWalk();
+
+  // Swing on vine 1
+  gsap.set('#wire-left',{opacity:1,attr:{x1:500*W()/1200, y1:0, x2:svgToScreen(400,495).x+30, y2:svgToScreen(400,495).y}});
+  gsap.to('#stickman',{
+    x:svgToScreen(600,300).x, y:svgToScreen(600,300).y,
+    duration:0.8, ease:'power2.out'
+  });
+  await new Promise(r=>setTimeout(r,800));
+  gsap.to('#stickman',{
+    x:svgToScreen(750,495).x, y:svgToScreen(750,495).y,
+    duration:0.8, ease:'power2.in'
+  });
+  gsap.set('#wire-left',{opacity:0});
+  await new Promise(r=>setTimeout(r,800));
+
+  // Swing on vine 2
+  gsap.set('#wire-right',{opacity:1});
+  startWalk(2);
+  await gsap.to('#stickman',{x:svgToScreen(1300,495).x, duration:2, ease:'power1.inOut'}).then();
+  gsap.set('#wire-right',{opacity:0});
+}
+
+async function runFire(){
+  setStickmanColor('#ffaa44');
+  gsap.set('#sm-wet',{opacity:0});
+
+  gsap.fromTo('#fire-holo',{opacity:0},{opacity:1,duration:0.5,delay:0.3});
+
+  const start = svgToScreen(-60, 600);
+  positionStickman(start.x, start.y);
+  startWalk(2);
+
+  // Catch fire mid-way
+  await new Promise(r=>setTimeout(r,1500));
+  gsap.to('#sm-fire',{opacity:1,duration:0.3});
+  setStickmanColor('#ff8844');
+  playTone(120,'sawtooth',0.5,0.08);
+
+  await gsap.to('#stickman',{x:W()*1.1, duration:3, ease:'power1.inOut'}).then();
+}
+
+async function runOcean(){
+  setStickmanColor('#44aaff');
+  gsap.set('#sm-fire',{opacity:0});
+  gsap.to('#sm-wet',{opacity:1,duration:0.5});
+
+  gsap.fromTo('#ocean-holo',{opacity:0},{opacity:1,duration:0.5,delay:0.3});
+
+  // Dive in from top
+  const diveStart = svgToScreen(200, 80);
+  positionStickman(diveStart.x, diveStart.y);
+  
+  // Dive pose
+  gsap.set('#sm-arm-l-upper',{attr:{x2:20,y2:10}});
+  gsap.set('#sm-arm-r-upper',{attr:{x2:40,y2:10}});
+  gsap.set('#sm-arm-l-lower',{attr:{x1:20,y1:10,x2:14,y2:-4}});
+  gsap.set('#sm-arm-r-lower',{attr:{x1:40,y1:10,x2:46,y2:-4}});
+
+  await gsap.to('#stickman',{y:svgToScreen(200,400).y,duration:0.8,ease:'power2.in'}).then();
+
+  // Swim
+  startSwim();
+  setStickmanColor('rgba(100,180,255,0.8)');
+  gsap.to('#stickman',{scale:0.85,opacity:0.8,duration:0.3});
+
+  await gsap.to('#stickman',{x:svgToScreen(1100,350).x, y:svgToScreen(1100,350).y, duration:5, ease:'power1.inOut'}).then();
+  stopSwim();
+}
+
+async function runSpace(){
+  setStickmanColor('#ccaaff');
+  gsap.set('#sm-fire',{opacity:0});
+  gsap.to('#sm-wet',{opacity:0,duration:0.3});
+  gsap.to('#stickman',{scale:1,opacity:1,duration:0.3});
+
+  gsap.fromTo('#space-holo',{opacity:0},{opacity:1,duration:0.5,delay:0.3});
+  gsap.to('#space-ui',{opacity:1,duration:0.5,delay:1});
+
+  // Enter spacecraft
+  const craftPos = svgToScreen(580, 540);
+  positionStickman(craftPos.x, craftPos.y);
+  startWalk(1);
+  
+  await gsap.to('#stickman',{x:svgToScreen(595,600).x,y:svgToScreen(595,600).y,duration:1.5,ease:'power1.inOut'}).then();
+  stopWalk();
+
+  // Stickman enters rocket
+  gsap.to('#stickman',{opacity:0,duration:0.5});
+
+  // Rocket ignition
+  await new Promise(r=>setTimeout(r,500));
+  gsap.to('#rocket-exhaust',{opacity:1,duration:0.3});
+  playTone(80,'sawtooth',0.5,0.15); playTone(60,'sawtooth',0.5,0.1,0.2);
+
+  // Launch
+  await gsap.to('#spacecraft',{y:-H(),duration:3,ease:'power3.in'}).then();
+  await new Promise(r=>setTimeout(r,500));
+  gsap.set('#spacecraft',{y:0});
+}
+
+async function runMoon(){
+  setStickmanColor('#bbccff');
+  gsap.to('#stickman',{opacity:1,duration:0.3});
+  gsap.to('#stickman',{scale:0.9,duration:0.3});
+
+  gsap.fromTo('#moon-holo',{opacity:0},{opacity:1,duration:0.5,delay:0.3});
+  gsap.to('#moon-ui',{opacity:1,duration:0.5,delay:1.5});
+
+  // Float down from sky (low gravity)
+  const start = svgToScreen(600, -100);
+  positionStickman(start.x, start.y);
+  startWalk(0.6);
+
+  await gsap.to('#stickman',{y:svgToScreen(600,630).y, duration:2.5, ease:'bounce.out'}).then();
+
+  // Walk around searching
+  await gsap.to('#stickman',{x:svgToScreen(900,630).x, duration:3, ease:'power1.inOut'}).then();
+  stopWalk();
+
+  // Puzzled expression
+  gsap.to('#sm-mouth',{attr:{d:'M 26 20 Q 30 17 34 20'},duration:0.3});
+  gsap.to('#sm-arm-r-upper',{attr:{x2:50,y2:28},duration:0.3});
+  gsap.to('#sm-arm-r-lower',{attr:{x1:50,y1:28,x2:56,y2:20},duration:0.3});
+  
+  await new Promise(r=>setTimeout(r,2000));
+}
+
+async function runGlitch(){
+  // Glitch explosion
+  const glitchEl = document.getElementById('scene-glitch');
+  const main = document.getElementById('glitch-main');
+  const sub = document.getElementById('glitch-sub');
+  const bars = document.getElementById('glitch-bars');
+  const pixels = document.getElementById('glitch-pixels');
+
+  // Generate glitch bars
+  for(let i=0;i<20;i++){
+    const bar = document.createElement('div');
+    bar.style.cssText=`position:absolute;left:0;right:0;height:${Math.random()*30+5}px;
+      top:${Math.random()*100}%;background:${['#ff0040','#00ffff','#ff8800','#fff'][Math.floor(Math.random()*4)]};
+      opacity:${Math.random()*0.6+0.1};mix-blend-mode:screen;
+      animation:glitch-bar-anim ${Math.random()*0.2+0.05}s infinite;`;
+    bars.appendChild(bar);
+  }
+
+  // Pixel noise
+  for(let i=0;i<200;i++){
+    const px = document.createElement('div');
+    px.style.cssText=`position:absolute;width:4px;height:4px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      background:${['#ff0040','#00ffff','#ffffff','#ff8800'][Math.floor(Math.random()*4)]};
+      animation:glitch-px ${Math.random()*0.1+0.05}s infinite alternate;`;
+    pixels.appendChild(px);
+  }
+
+  gsap.to(main,{opacity:1,duration:0.1});
+  playTone(40,'sawtooth',0.3,0.2);
+  playTone(800,'square',0.2,0.15,0.1);
+  playTone(1600,'square',0.1,0.1,0.2);
+
+  await new Promise(r=>setTimeout(r,300));
+  gsap.to(sub,{opacity:1,duration:0.2});
+  
+  // Flash white
+  const fl = document.getElementById('glitch-overlay');
+  gsap.to(fl,{opacity:1,backgroundColor:'#fff',duration:0.1,yoyo:true,repeat:5});
+  playTone(2000,'square',0.1,0.3);
+
+  await new Promise(r=>setTimeout(r,2000));
+
+  // Big flash
+  gsap.set(fl,{opacity:1,backgroundColor:'#fff'});
+  await new Promise(r=>setTimeout(r,100));
+  gsap.to(fl,{opacity:0,duration:0.5});
+
+  // Clear
+  bars.innerHTML=''; pixels.innerHTML='';
+  gsap.set(main,{opacity:0}); gsap.set(sub,{opacity:0});
+}
+
+async function runBedroom(){
+  setStickmanColor('#ccaaee');
+  gsap.set('#sm-fire',{opacity:0});
+  gsap.to('#sm-wet',{opacity:0,duration:0.3});
+  gsap.to('#sm-mud',{opacity:0,duration:0.3});
+  // Reset mouth
+  gsap.set('#sm-mouth',{attr:{d:'M 26 18 Q 30 21 34 18'}});
+
+  // Dream fog comes in
+  await new Promise(r=>setTimeout(r,1000));
+
+  // Stickman in bed (laying)
+  const bedPos = svgToScreen(430, 460);
+  positionStickman(bedPos.x-30, bedPos.y, -1); // face up
+
+  // Lay down pose
+  gsap.set('#stickman-svg',{rotation:0});
+  gsap.set('#sm-leg-l-upper',{attr:{x2:18,y2:78}});
+  gsap.set('#sm-leg-r-upper',{attr:{x2:42,y2:78}});
+  gsap.set('#sm-arm-l-upper',{attr:{x2:14,y2:42}});
+  gsap.set('#sm-arm-r-upper',{attr:{x2:46,y2:42}});
+  
+  gsap.to('#stickman',{opacity:0.9,duration:0.5});
+  gsap.to('#stickman',{scale:0.85,duration:0.3});
+
+  // Stickman sits up
+  await new Promise(r=>setTimeout(r,1000));
+  gsap.to('#stickman',{y:bedPos.y-40,duration:0.8,ease:'power2.out'});
+
+  // Pull out phone
+  await new Promise(r=>setTimeout(r,1000));
+  const phone = document.getElementById('phone-element');
+  const phoneX = bedPos.x - 10;
+  const phoneY = bedPos.y - 80;
+  gsap.set(phone,{x:phoneX,y:phoneY,rotation:-20});
+  gsap.to(phone,{opacity:1,rotation:0,duration:0.6,ease:'back.out(1.5)','class':'phone-glow'});
+
+  // Phone screen glow  
+  playAtmosPad(220); playAtmosPad(330);
+  await new Promise(r=>setTimeout(r,1200));
+
+  // Dream particles
+  const dp = document.getElementById('dream-particles');
+  for(let i=0;i<30;i++){
+    const p = document.createElement('div');
+    p.style.cssText=`
+      position:absolute;width:${Math.random()*6+2}px;height:${Math.random()*6+2}px;
+      border-radius:50%;background:rgba(${150+Math.random()*100},${100+Math.random()*100},255,0.7);
+      left:${30+Math.random()*50}%;top:${40+Math.random()*30}%;
+      animation:bubble-rise ${Math.random()*3+2}s linear forwards;
+      animation-delay:${Math.random()*2}s;
+    `;
+    dp.appendChild(p);
+  }
+
+  // Final bubble rises
+  const bubble = document.getElementById('final-bubble');
+  bubble.style.left = (phoneX-80)+'px';
+  bubble.style.top = (phoneY-140)+'px';
+  
+  await new Promise(r=>setTimeout(r,800));
+  gsap.to(bubble,{opacity:1,y:-20,duration:1.2,ease:'power2.out'});
+  playAtmosPad(440); playAtmosPad(660);
+  
+  // Glow effect on the last word
+  await new Promise(r=>setTimeout(r,2000));
+  gsap.to(bubble,{boxShadow:'0 0 60px rgba(120,0,255,0.6), 0 0 100px rgba(100,0,200,0.3)',duration:1});
+}
+
+// ============================================================
+// MAIN JOURNEY
+// ============================================================
+async function startJourney(){
+  // Init audio on user gesture
+  getAudioCtx();
+  
+  // Hide start screen
+  gsap.to('#start-screen',{opacity:0,duration:1,onComplete:()=>{
+    document.getElementById('start-screen').style.display='none';
+  }});
+  
+  document.getElementById('scene-container').style.display='block';
+
+  await new Promise(r=>setTimeout(r,800));
+
+  // CITY
+  await fadeToScene('city', 1);
+  await runCity();
+
+  // MOUNTAIN
+  await fadeToScene('mountain', 1.5);
+  await runMountain();
+
+  // JUNGLE
+  await fadeToScene('jungle', 1.2);
+  await runJungle();
+
+  // FIRE
+  await fadeToScene('fire', 1);
+  await runFire();
+
+  // OCEAN
+  await fadeToScene('ocean', 1.2);
+  await runOcean();
+
+  // SPACE
+  await fadeToScene('space', 1.5);
+  await runSpace();
+
+  // MOON
+  await fadeToScene('moon', 2);
+  await runMoon();
+
+  // GLITCH
+  await fadeToScene('glitch', 0.3);
+  stopWalk(); stopClimb(); stopSwim();
+  gsap.to('#stickman',{opacity:0,duration:0.2});
+  await runGlitch();
+
+  // BEDROOM
+  await fadeToScene('bedroom', 1.5);
+  await runBedroom();
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+initStartStars();
+initRain();
+initBubbles();
+
+// Glitch bar animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes glitch-bar-anim {
+    0%{transform:translateX(-5px);opacity:0.2;}
+    50%{transform:translateX(5px);opacity:0.6;}
+    100%{transform:translateX(0);opacity:0.1;}
+  }
+  @keyframes glitch-px {
+    0%{opacity:0;transform:scale(0);}
+    100%{opacity:1;transform:scale(1);}
+  }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>
